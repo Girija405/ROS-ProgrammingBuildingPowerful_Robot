@@ -1,0 +1,138 @@
+https://learning.oreilly.com/library/view/ros-programming-building/9781788627436/c55c6d29-09d4-411c-8b31-5c0a8be7cc2c.xhtml
+
+
+
+source ~/.bashrc
+echo $ROS_DISTRO
+$ roscore
+$ rosrun turtlesim turtlesim_node
+$ sudo apt-get update
+$ sudo apt-get install ros-kinetic-ros-base
+$ sudo apt-get install ros-kinetic-PACKAGE
+$ apt-cache search ros-kinetic
+
+$ sudo apt-get install ros-kinetic-ros
+$ sudo apt-get install ros-kinetic-roslaunch
+$ sudo apt-get install ros-kinetic-rosparam
+$ sudo apt-get install ros-kinetic-rosservice
+rosdep update
+$ echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
+$ source ~/.bashrc
+$ source /opt/ros/kinetic/setup.bash
+
+$ sudo apt-get install python-rosinstall
+
+------------
+. With this, you can compile one package at a time, as shown in the following commands:
+
+--------------
+ $ cmake packageToBuild/
+    $ make  
+-----------
+If you want to compile all your packages, you can use the catkin_make command line, as shown in the following commands:
+
+ $ cd workspace
+    $ catkin_make  
+
+----------------------------
+Usually when we talk about packages, we refer to a typical structure of files and folders. This structure looks as follows:
+include/package_name/: This directory includes the headers of the libraries that you would need.
+msg/: If you develop nonstandard messages, put them here.
+scripts/: These are executable scripts that can be in Bash, Python,
+or any other scripting language.
+src/: This is where the source files of your programs are present. You can create a folder for nodes and nodelets or organize it as you want.
+srv/: This represents the service (srv) types.
+CMakeLists.txt: This is the CMake build file.
+package.xml: This is the package manifest.
+To create, modify, or work with packages, ROS gives us tools for assistance, some of which are as follows:
+
+rospack: This command is used to get information or find packages in the system.
+catkin_create_pkg: This command is used when you want to create a new package.
+catkin_make: This command is used to compile a workspace.
+rosdep: This command installs the system dependencies of a package.
+rqt_dep: This command is used to see the package dependencies as a graph. If you want to see the package dependencies as a graph, you will find a plugin called package graph in rqt. Select a package and see the dependencies.
+To move between packages and their folders and files, ROS gives us a very useful package called rosbash, which provides commands that are very similar to Linux commands. The following are a few examples:
+
+roscd: This command helps us change the directory. This is similar to the cd command in Linux.
+rosed: This command is used to edit a file.
+roscp: This command is used to copy a file from a package.
+rosd: This command lists the directories of a package.
+rosls: This command lists the files from a package. This is similar to the ls command in Linux.
+Every package must contain a package.xml file, as it is used to specify information about the package. If you find this file inside a folder, it is very likely that this folder is a package or a metapackage.
+
+If you open the package.xml file, you will see information about the name of the package, dependencies, and so on. All of this is to make the installation and the distribution of these packages easier .
+
+Two typical tags that are used in the package.xml file are <build_depend> and
+<run _depend>.
+
+The <build_depend> tag shows which packages must be installed before installing the current package. This is because the new package might use functionality contained in another package.
+
+The <run_depend> tag shows the packages that are necessary for running the code of the package. The following screenshot is an example of the package.xml file:
+
+-------------------------------------------
+
+$ rosstack find ros_tutorials  
+ $ vim /opt/ros/kinetic/ros_tutorials/package.xml
+rosmsg show std_msgs/Header
+------------------------------------------
+
+rosnode info NODE: This prints information about a node
+rosnode kill NODE: This kills a running node or sends a given signal
+rosnode list: This lists the active nodes
+rosnode machine hostname: This lists the nodes running on a particular machine or lists machines
+rosnode ping NODE: This tests the connectivity to the node
+rosnode cleanup: This purges the registration information from unreachable nodes
+
+
+An example of changing a topic name is as follows:
+ $ rosrun book_tutorials tutorialX topic1:=/level1/topic1  
+This command will change the topic name topic1 to /level1/topic1.
+
+To change parameters in the node, you can do something similar to changing the topic name. For this, you only need to add an underscore (_) to the parameter name; for example:
+ $ rosrun book_tutorials tutorialX _param:=9.0  
+The preceding command will set param to the float number 9.0.
+
+-------------------------------------
+
+ROS has a tool to work with topics called rostopic. It is a command-line tool that gives us information about the topic or publishes data directly on the network.
+This tool has the following parameters:
+
+rostopic bw /topic: This displays the bandwidth used by the topic.
+rostopic echo /topic: This prints messages to the screen.
+rostopic find message_type: This finds topics by their type.
+rostopic hz /topic: This displays the publishing rate of the topic.
+rostopic info /topic: This prints information about the topic, such as its message type, publishers, and subscribers.
+rostopic list: This prints information about active topics.
+rostopic pub /topic type args: This publishes data to the topic. It allows us to create and publish data in whatever topic we want, directly from the command line.
+rostopic type /topic: This prints the topic type, that is, the type of message it publishes.
+
+----------------------------------------
+
+ROS has the rosmsg command-line tool to get information about messages.
+The accepted parameters are as follows:
+
+rosmsg show: This displays the fields of a message
+rosmsg list: This lists all messages
+rosmsg package: This lists all of the messages in a package
+rosmsg packages: This lists all of the packages that have the message
+rosmsg users: This searches for code files that use the message type
+rosmsg md5: This displays the MD5 sum of a message
+------------------------
+To use bag files, we have the following tools in ROS:
+rosbag: This is used to record, play, and perform other operations
+rqt_bag: This is used to visualize data in a graphic environment
+rostopic: This helps us see the topics sent to the nodes
+
+----------------------------------------
+ROS has the rosparam tool to work with Parameter Server. The supported parameters are as follows:
+
+rosparam list: This lists all the parameters in the server
+rosparam get parameter: This gets the value of a parameter
+rosparam set parameter value: This sets the value of a parameter
+rosparam delete parameter: This deletes a parameter
+rosparam dump file: This saves Parameter Server to a file
+rosparam load file: This loads a file (with parameters) on Parameter Server
+
+------------------------------
+
+
