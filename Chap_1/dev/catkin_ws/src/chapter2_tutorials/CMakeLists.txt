@@ -10,6 +10,9 @@ project(chapter2_tutorials)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
+message_generation
+dynamic_reconfigure
+
 )
 
 ## System dependencies are found with CMake's conventions
@@ -46,18 +49,21 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
+ add_message_files(
+   FILES
+chapter2_msg1.msg 
 #   Message1.msg
 #   Message2.msg
-# )
+ )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
+ add_service_files(
+   FILES
+    chapter2_srv1.srv 
+
 #   Service1.srv
 #   Service2.srv
-# )
+ )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -67,10 +73,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+ generate_messages(
+   DEPENDENCIES
+   std_msgs
+ )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -87,10 +93,11 @@ find_package(catkin REQUIRED COMPONENTS
 ##     and list every .cfg file to be processed
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
-# generate_dynamic_reconfigure_options(
+ generate_dynamic_reconfigure_options(
 #   cfg/DynReconf1.cfg
 #   cfg/DynReconf2.cfg
-# )
+cfg/chapter2.cfg 
+ )
 
 ###################################
 ## catkin specific configuration ##
@@ -102,6 +109,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
+CATKIN_DEPENDS message_runtime
 #  INCLUDE_DIRS include
 #  LIBRARIES chapter2_tutorials
 #  CATKIN_DEPENDS roscpp std_msgs
@@ -114,10 +122,44 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
-)
+
+include_directories(include ${catkin_INCLUDE_DIRS})
+
+add_executable(example1_b src/example1_b.cpp) 
+ 
+target_link_libraries(example1_b ${catkin_LIBRARIES}) 
+add_dependencies(example1_b chapter2_tutorials_generate_messages_cpp) 
+ 
+ add_executable(example1_a src/example1_a.cpp)
+target_link_libraries(example1_a ${catkin_LIBRARIES})
+add_dependencies(example1_a chapter2_tutorials_generate_messages_cpp)
+
+add_executable(example2_a src/example2_a.cpp) 
+add_executable(example2_b src/example2_b.cpp) 
+ 
+add_dependencies(example2_a 
+ chapter2_tutorials_generate_messages_cpp)
+add_dependencies(example2_b 
+ chapter2_tutorials_generate_messages_cpp) 
+target_link_libraries(example2_a ${catkin_LIBRARIES}) 
+target_link_libraries(example2_b ${catkin_LIBRARIES}) 
+
+add_executable(example3_a src/example3_a.cpp) 
+add_executable(example3_b src/example3_b.cpp) 
+ 
+add_dependencies(example3_a 
+ chapter2_tutorials_generate_messages_cpp)
+add_dependencies(example3_b 
+ chapter2_tutorials_generate_messages_cpp) 
+target_link_libraries(example3_a ${catkin_LIBRARIES}) 
+target_link_libraries(example3_b ${catkin_LIBRARIES}) 
+
+
+add_executable(example4 src/example4.cpp) 
+add_dependencies(example4 chapter2_tutorials_gencfg) 
+target_link_libraries(example4 ${catkin_LIBRARIES}) 
+
+
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -203,3 +245,5 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+

@@ -3,6 +3,6 @@ prefix=/home/expert/Documents/ROS ProgrammingBuildingPowerful_Robot/Chap_1/dev/c
 Name: chapter2_tutorials
 Description: Description of chapter2_tutorials
 Version: 0.0.0
-Cflags: 
+Cflags: -I/home/expert/Documents/ROS ProgrammingBuildingPowerful_Robot/Chap_1/dev/catkin_ws/devel/include
 Libs: -L${prefix}/lib 
-Requires: 
+Requires: message_runtime

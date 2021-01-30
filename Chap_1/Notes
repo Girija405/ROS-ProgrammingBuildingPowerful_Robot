@@ -1,0 +1,350 @@
+to find the path of the turtlesim package,
+rospack find turtlesim
+
+ obtain the path for the ros_comm metapackage as follows:
+ $ rosstack find ros_comm 
+
+To list the files inside the pack or stack,
+$ rosls turtlesim  
+
+Changing the current working directory, essentially moving to a new folder, can be done with roscd as follows:
+
+  $ roscd turtlesim
+    $ pwd 
+
+CREATING OUR OWN WORKSPACE
+----------------------------
+
+To see the workspace that ROS is using, use the following command:
+
+ $ echo $ROS_PACKAGE_PATH
+
+The folder that we are going to create is in ~/dev/catkin_ws/src/. To add this folder, we use the following commands:
+$ mkdir -p ~/dev/catkin_ws/src
+    $ cd ~/dev/catkin_ws/src
+    $ catkin_init_workspace
+
+
+Once we've created the workspace folder, there are no packages inside-only a CMakeList.txt file. The next step is building the workspace. To do this, we use the following commands:
+
+  $ cd ~/dev/catkin_ws
+    $ catkin_make  
+
+Now, if you type the ls command in the directory, you can see new folders created with the previous command. These are the build and devel folders.
+To finish the configuration, use the following command:
+ $ source devel/setup.bash  
+
+ $ echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc  
+
+
+CREATING AN ROS PACKAGE AND METAPACKAGE :
+----------------------------------------
+
+We will create the new package in our recently initialized workspace using the following commands:
+$ cd ~/dev/catkin_ws/src
+    $ catkin_create_pkg chapter2_tutorials std_msgs roscpp  
+
+
+The format of this command includes the name of the package and the dependencies that will have the package, in our case, std_msgs and roscpp. This is shown in the following command:
+catkin_create_pkg [package_name] [dependency1] ... [dependencyN] 
+
+The following dependencies are included:
+
+std_msgs: This contains common message types representing primitive data types and other basic message constructs, such as multiarray.
+roscpp: This is a C++ implementation of ROS. It provides a client library that enables C++ programmers to quickly interface with ROS topics, services, and parameters.
+As we saw earlier, you can use the rospack, roscd, and rosls commands to retrieve information about the new package. The following are some of the operations which can be performed:
+
+rospack profile: This command informs you about the newly-added packages to the ROS system. It is useful after installing any new package.
+rospack find chapter2_tutorials: This command helps us find
+the path.
+rospack depends chapter2_tutorials: This command helps us see the dependencies.
+rosls chapter2_tutorials: This command helps us see the content.
+roscd chapter2_tutorials: This command changes the actual path.
+
+BUILDING AN ROS PACKAGE:
+------------------------
+
+Once you have your package created and you have some code, it is necessary to build the package. When the package is built, the code contained in it is compiled; this includes not only the code added by the user, but also the code generated from the messages and services.
+To build a package, we will use the catkin_make tool, as follows:
+    $ cd ~/dev/catkin_ws/
+    
+    $ catkin_make  
+
+
+When you are in the chapter2_tutorials folder and try to build the package using catkin_make, you will get the following error:
+
+    The specified base path "/home/your_user/dev/catkin_ws/src/chapter2_tutorials" contains a CMakeLists.txt but "catkin_make" must be invoked in the root of workspace  
+
+If you execute catkin_make in the catkin_ws folder, you will obtain a good compilation. Finally, compiling a single package using catkin_make can be done using the following command:
+ $ catkin_make --pkg <package name>  
+
+PLAYING WITH ROS NODES:
+-------------------------
+
+As we explained in the Nodes and nodelets section, nodes are executable programs and, once built, these executables can be found in the devel space. To practise and learn about nodes, we are going to use a typical package called turtlesim.
+
+If you have installed the desktop installation, you will have the turtlesim package preinstalled; if not, install it with the following command:
+
+ $ sudo apt-get install ros-kinetic-ros-tutorials 
+Before starting this tutorial, it is important that you open a terminal and start roscore using the following command:
+ $ roscore
+
+To get information on nodes, we have the rosnode tool. To see what parameters are provided, type the following command:
+$ rosnode  
+
+ If you want a more detailed explanation of the use of these parameters, use the following command:
+
+  $ rosnode <param> -h 
+
+Now that roscore is running, we are going to get information about the nodes that are running, using the following command:
+$ rosnode list 
+
+You will see that the only node running is /rosout. This is normal, as this node is usually launched with roscore.
+
+We can get all the information about this node using the parameters provided by the rosnode tool. Try to use the following commands for more information:
+
+    $ rosnode info
+    $ rosnode ping
+    $ rosnode machine
+    $ rosnode kill
+    $ rosnode cleanup  
+
+Now we are going to start a new node with rosrun using the following command:
+
+ $ rosrun turtlesim turtlesim_node  
+
+If we see the node list now, we will see a new node with the name /turtlesim.
+You can see information about the node using rosnode info nameNode.
+
+You can see a lot of information that can be used to debug your programs, using the following command:
+
+    $ rosnode info /turtlesim 
+
+In the information, we can see the Publications (topics), Subscriptions (topics), and Services (srv) that the node has and the unique name of each.
+
+Now, let's see how you interact with the node using topics and services.
+
+LEARNING HOW TO INTERACT WITH TOPICS:
+-------------------------------------
+
+To interact and get information about topics, we have the rostopic tool. This tool accepts the following parameters:
+
+rostopic bw TOPIC: This displays the bandwidth used by topics
+rostopic echo TOPIC: This prints messages to the screen
+rostopic find TOPIC: This finds topics by their type
+rostopic hz TOPIC: This displays the publishing rate of topics
+rostopic info TOPIC: This prints information about active topics
+rostopic list: This lists the active topics
+rostopic pubs TOPIC: This publishes data to the topic
+rostopic type TOPIC: This prints the topic type
+If you want to see more information on these parameters, use -h, as follows:
+
+ $ rostopic bw -h  
+
+With the pub parameter, we can publish topics that can be subscribed to by any node. We only need to publish the topic with the correct name. We will do this test later; we are now going to use a node that will do this work for us:
+
+   $ rosrun turtlesim turtle_teleop_key 
+
+With this node, we can move the turtle using the arrow keys, as illustrated in the following screenshot:
+
+
+Why does the turtle move when turtle_teleop_key is executed?
+
+Checking the information provided by rosnode about the /teleop_turtle and /turtlesim nodes, we can see that there exists a topic called /turtle1/cmd_vel [geometry_msgs/Twist] in the Publications section of the node /teleop_turtle, and in the Subscriptions section of the /turtlesim node, there is /turtle1/cmd_vel [geometry_msgs/Twist]:
+
+
+ $ rosnode info /teleop_turtle  
+
+This means that the first node is publishing a topic that the second node can subscribe to. You can see the topic list using the following command line:
+
+ $ rostopic list  
+
+The output will be as follows:
+ /rosout
+      /rosout_agg
+    /turtle1/colour_sensor
+    /turtle1/cmd_vel
+    /turtle1/pose  
+
+With the echo parameter, you can see the information sent by the node. Run the following command line and use the arrow keys to see the data that is being sent:
+
+ $ rostopic echo /turtle1/cmd_vel  
+You will see something similar to the following output:
+  ---
+    linear:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    angular:
+    x: 0.0
+    y: 0.0
+    z: 2.0
+    ---  
+
+You can see the type of message sent by the topic using the following command line:
+
+
+    $  rostopic type /turtle1/cmd_vel  
+
+
+You will see something similar to the following output:
+
+
+Geometry_msgs/Twist  
+If you want to see the message fields, you can do it with the following command:
+
+
+ $ rosmsg show geometry_msgs/Twist  
+
+You will see something similar to the following output:
+geometry_msgs/Vector3 linear
+      float64 x
+      float64 y
+      float64 z
+    geometry_msgs/Vector3 angular
+      float64 x
+      float64 y
+      float64 z  
+
+These tools are useful because, with this information, we can publish topics using the rostopic pub [topic] [msg_type] [args] command:
+
+$ rostopic pub /turtle1/cmd_vel  geometry_msgs/Twist -r 1 -- "linear:
+    x: 1.0
+    y: 0.0
+    z: 0.0
+    angular:
+    x: 0.0
+    y: 0.0
+    z: 1.0"  
+
+You will see the turtle doing a curve, as shown in the following screenshot:
+
+LEARNING HOW TO USE SERVICES :
+------------------------------
+
+Services are another way through which nodes can communicate with each other. Services allow nodes to send a request and receive a response.
+
+The tool that we are going to use to interact with services is called rosservice. The accepted parameters for this command are as follows:
+
+rosservice args /service: This prints the service arguments
+rosservice call /service: This calls the service with the arguments provided
+rosservice find msg-type: This finds services by their service type
+rosservice info /service: This prints information about the service
+rosservice list: This lists the active services
+rosservice type /service: This prints the service type
+rosservice uri /service: This prints the ROSRPC URI service
+We are going to list the services available for the turtlesim node using the following command, so if it is not working, run roscore and run theturtlesim node:
+
+    $ rosservice list  
+You will obtain the following output:
+
+    /clear
+    /kill
+    /reset
+    /rosout/get_loggers
+    /rosout/set_logger_level
+    /spawn
+    /teleop_turtle/get_loggers
+    /teleop_turtle/set_logger_level
+    /turtle1/set_pen
+    /turtle1/teleport_absolute
+    /turtle1/teleport_relative
+    /turtlesim/get_loggers
+    /turtlesim/set_logger_level  
+If you want to see the type of any service, for example, the /clear service, use the following command:
+
+    $ rosservice type /clear  
+You will see something similar to the following output:
+
+    std_srvs/Empty  
+To invoke a service, you will use rosservice call [service] [args]. If you want to invoke the /clear service, use the following command:
+
+    $ rosservice call /clear  
+In the turtlesim window, you will now see that the lines created by the movements of the turtle will be deleted.
+
+Now we are going to try another service, for example, the /spawn service. This service will create another turtle in another location with a different orientation.
+To start with, we are going to see the following type of message:
+
+    $ rosservice type /spawn | rossrv show  
+You will see something similar to the following output:
+
+    float32 x
+    float32 y
+    float32 theta
+    string name
+    ---
+    string name  
+The preceding command is the same as the following commands. If you want to know why these lines are the same, search in Google about piping Linux:
+
+    $ rosservice type /spawn  
+You will see something similar to the following output:
+
+    turtlesim/Spawn  
+Type in the following command:
+
+    $ rossrv show turtlesim/Spawn  
+You will see something similar to the following output:
+
+    float32 x
+    float32 y
+    float32 theta
+    string name
+    ---
+    string name  
+With these fields, we know how to invoke the service. We need the position of x and y, the orientation (theta), and the name of the new turtle:
+
+    $ rosservice call /spawn 3 3 0.2 "new_turtle"  
+We then obtain the following result:
+
+
+
+
+
+-----------------------
+USING PARAMETER SERVER:
+-------------------------
+Parameter Server is used to store data that is accessible to all nodes. ROS has a tool called rosparam to manage Parameter Server. The accepted parameters are as follows:
+
+rosparam set parameter value: This sets the parameter
+rosparam get parameter: This gets the parameter
+rosparam load file: This loads parameters from the file
+rosparam dump file: This dumps parameters to the file
+rosparam delete parameter: This deletes the parameter
+rosparam list: This lists the parameter names
+For example, we can see the parameters in the server that are used by all nodes:
+
+    $ rosparam list  
+We obtain the following output:
+
+    /background_b
+    /background_g
+    /background_r
+    /rosdistro
+    /roslaunch/uris/host_aaronmr_laptop__60878
+    /rosversion
+    /run_id  
+The background parameters are of the turtlesim node. These parameters change the color of the windows that are initially blue. If you want to read a value, you will use the get parameter:
+
+    $ rosparam get /background_b  
+To set a new value, you will use the set parameter:
+
+    $ rosparam set /background_b 100  
+Another important feature of rosparam is the dump parameter. With this parameter, you can save or load the contents of Parameter Server.
+
+To save Parameter Server, use rosparam dump [file_name] as follows:
+
+    $ rosparam dump save.yaml  
+To load a file with new data for Parameter Server, use rosparam load [file_name] [namespace] as follows:
+
+    $ rosparam load load.yaml namespace  
+
+----------------------------------------------
+
+
+
+
+
+
+
+
+

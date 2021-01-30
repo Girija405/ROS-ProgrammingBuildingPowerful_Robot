@@ -1,0 +1,641 @@
+CREATING NODES:
+--------------
+
+In this section, we are going to learn how to create two nodes: one to publish data and the other to receive this data. This is the basic way of communicating between two nodes, that is, to handle data and do something with this data.
+
+Navigate to the chapter2_tutorials/src/ folder using the following command:
+
+    $ roscd chapter2_tutorials/src/  
+Create two files with the names example1_a.cpp and example1_b.cpp. The example1_a.cpp file will send the data with the node name, and the example1_b.cpp file will show the data in the shell. Copy the following code inside the example1_a.cpp file or download it from the repository:
+
+#include "ros/ros.h" 
+#include "std_msgs/String.h" 
+#include <sstream> 
+ 
+int main(int argc, char **argv) 
+{ 
+  ros::init(argc, argv, "example1_a"); 
+  ros::NodeHandle n; 
+  ros::Publisher chatter_pub = 
+     n.advertise<std_msgs::String>("message", 1000); 
+  ros::Rate loop_rate(10); 
+  while (ros::ok()) 
+  { 
+    std_msgs::String msg; 
+    std::stringstream ss; 
+    ss<< " I am the example1_a node "; 
+    msg.data = ss.str(); 
+    //ROS_INFO("%s", msg.data.c_str()); 
+    chatter_pub.publish(msg); 
+    ros::spinOnce(); 
+    loop_rate.sleep(); 
+  } 
+  return 0; 
+} 
+Here is a further explanation of the preceding code. The headers to be included are ros/ros.h, std_msgs/String.h, and sstream. Here, ros/ros.h includes all the files necessary for using the node with ROS, and std_msgs/String.h includes the header that denotes the type of message that we are going to use:
+
+#include "ros/ros.h" 
+#include "std_msgs/String.h" 
+#include <sstream> 
+At this point, we initialize the node and set the name; remember that the name must be unique:
+
+ros::init(argc, argv, "example1_a"); 
+This is the handler of our process; it allows us to interact with the environment:
+
+ros::NodeHandle n; 
+We instantiate a publisher and tell the master the name of the topic and the type. The name is message, and the second parameter is the buffer size. If the topic is publishing data quickly, the buffer will keep at least 1000 messages:
+
+ros::Publisher chatter_pub = 
+ n.advertise<std_msgs::String>("message", 1000);
+The next step is to set the data sending frequency, which in this case is 10 Hz:
+
+ros::Rate loop_rate(10); 
+The ros::ok() line stops the node if Ctrl + C is pressed or if ROS stops all the nodes:
+
+while (ros::ok()) 
+{ 
+In this part, we create a variable for the message with the correct type to send the data:
+
+std_msgs::String msg; 
+std::stringstream ss; 
+ss<< " I am the example1_a node "; 
+msg.data = ss.str(); 
+We continue by sending the message, in this case, the semantic is to publish a message, using the previously defined publisher:
+
+chatter_pub.publish(msg); 
+The spinOnce function takes care of handling all of ROS's internal events and actions, such as reading from subscribed topics; spinOnce performs one iteration in the main loop of ROS in order to allow the user to perform actions between iterations, in contrast with the spin function, which runs the main loop without interruption:
+
+ros::spinOnce(); 
+Finally, we sleep for the required time to get a 10 Hz frequency:
+
+loop_rate.sleep(); 
+Now we will create the other node. Copy the following code inside the example1_b.cpp file or download it from the repository:
+
+#include "ros/ros.h" 
+#include "std_msgs/String.h" 
+ 
+void chatterCallback(const std_msgs::String::ConstPtr&amp; msg) 
+{ 
+  ROS_INFO("I heard: [%s]", msg->data.c_str()); 
+} 
+ 
+int main(int argc, char **argv) 
+{ 
+  ros::init(argc, argv, "example1_b"); 
+  ros::NodeHandle n; 
+  ros::Subscriber sub = n.subscribe("message", 1000, 
+     chatterCallback); 
+  ros::spin(); 
+  return 0; 
+} 
+Let's explain the code. Include the headers and the type of message to use for the topic:
+
+#include "ros/ros.h" 
+#include "std_msgs/String.h" 
+The following type of function is a callback and happens in response to an action, which in this case is the reception of a String message. This function allows us to do something with the data; in this case, we display it in the terminal:
+
+void messageCallback(const std_msgs::String::ConstPtr&amp; msg) 
+{ 
+  ROS_INFO("I heard: [%s]", msg->data.c_str()); 
+} 
+We create a subscriber and start to listen to the topic with the name message. The buffer will be of 1000, and the function to handle the message will be messageCallback:
+
+ros::Subscriber sub = n.subscribe("message", 1000, 
+   messageCallback);
+The ros::spin() line is the main loop where the node starts to read the topic and when a message arrives, messageCallback is called. When the user presses Ctrl + C, the node exits the loop and ends:
+
+ros::spin(); 
+---------------------------------
+BUILDING THE NODE:
+-----------------
+As we are using the chapter2_tutorials package, we are going to edit the CMakeLists.txt file. You can use your favorite editor or the rosed tool. This will open the file with the Vim editor:
+
+    $ rosed chapter2_tutorials CMakeLists.txt  
+At the end of the file, we will copy the following lines:
+
+include_directories( 
+include 
+  ${catkin_INCLUDE_DIRS} 
+) 
+ 
+add_executable(example1_a src/example1_a.cpp) 
+add_executable(example1_b src/example1_b.cpp) 
+ 
+add_dependencies(example1_a 
+ chapter2_tutorials_generate_messages_cpp)add_dependencies(example1_b 
+ chapter2_tutorials_generate_messages_cpp) 
+ 
+target_link_libraries(example1_a ${catkin_LIBRARIES}) 
+target_link_libraries(example1_b ${catkin_LIBRARIES}) 
+Now, to build the package and compile all the nodes, use the catkin_make tool as follows:
+
+    $ cd ~/dev/catkin_ws/
+    $ catkin_make --pkg chapter2_tutorials  
+If ROS is not running on your computer, you will have to use the following command:
+
+    $ roscore  
+You can check whether ROS is running using the rosnode list command as follows:
+
+    $ rosnode list  
+Now run both nodes in different shells:
+
+    $ rosrun chapter2_tutorials example1_a
+    
+    $ rosrun chapter2_tutorials example1_b  
+If you check the shell where the example1_b node is running, you will see something similar to the following screenshot:
+
+Everything that is happening can be viewed in the following diagram. You can see that the example1_a node is publishing the message topic, and the example2_b node is subscribing to the topic:
+
+
+You can use rosnode and rostopic to debug and see what the nodes are doing. Try the following commands:
+
+    $ rosnode list
+    $ rosnode info /example1_a
+    $ rosnode info /example1_b
+    $ rostopic list
+    $ rostopic info /message
+    $ rostopic type /message
+    $ rostopic bw /message  
+
+---------------------------------------------
+CREATING MSG AND SRV FILES:
+-----------------------------
+In this section, we are going to learn how to create msg and srv files for use in our nodes. They are files where we put a specification about the type of data to be transmitted and the values of this data. ROS will use these files to create the necessary code for us to implement the msg and srv files to be used in our nodes.
+
+Let's start with the msg file first.
+
+In the example used in the Building the node section, we created two nodes with a standard type message. Now we are going to learn how to create custom messages with the tools that ROS has.
+
+First, create a new msg folder in our chapter2_tutorials package; create a new chapter2_msg1.msg file and add the following lines:
+
+int32 A 
+int32 B 
+int32 C 
+Now, edit package.xml and remove <!-- --> from the <build_depend>message_generation</build_depend> and <run_depend>message_runtime</run_depend> lines.
+
+Edit CMakeList.txt and add the message_generation line as follows:
+
+find_package(catkin REQUIRED COMPONENTS 
+roscpp 
+  std_msgs 
+  message_generation 
+) 
+Find the next lines, uncomment and add the name of the new message as follows:
+
+## Generate messages in the 'msg' folder 
+add_message_files( 
+        FILES 
+        chapter2_msg1.msg 
+) 
+ 
+## Generate added messages and services with any dependencies 
+ listed here 
+ generate_messages( 
+   DEPENDENCIES 
+   std_msgs 
+ ) 
+And now you can compile using the following lines:
+
+    $ cd ~/dev/catkin_ws/
+    $ catkin_make  
+To check whether all is OK, you can use the rosmsg command:
+
+    $ rosmsg show chapter2_tutorials/chapter2_msg1  
+If you see the same content as that of the chapter2_msg1.msg file, all is OK.
+
+Now we are going to create a srv file. Create a new folder in the chapter2_tutorials folder with the name srv, create a new chapter2_srv1.srv file and add the following lines:
+
+int32 A 
+int32 B 
+int32 C 
+--- 
+int32 sum 
+To compile the new msg and srv files, you have to uncomment the following lines in the package.xml and CMakeLists.txt files. These lines permit the configuration of the messages and services and tell ROS how and what to build.
+
+First of all, open the package.xml folder from your chapter2_tutorials package as follows:
+
+    $ rosed chapter2_tutorials package.xml  
+Search for the following lines and uncomment them:
+
+<build_depend>message_generation</build_depend> 
+<run_depend>message_runtime</run_depend> 
+Open CMakeLists.txt using the following command:
+
+    $ rosed chapter2_tutorials CMakeLists.txt  
+Find the following lines, uncomment them and complete them with the correct data:
+
+catkin_package( 
+  CATKIN_DEPENDS message_runtime 
+) 
+To generate messages, you need to add the message_generation line in the
+find_package section:
+
+find_package(catkin REQUIRED COMPONENTS 
+roscpp 
+  std_msgs 
+message_generation 
+) 
+Add the names of the message and service files in the add_message_files section, as follows:
+
+## Generate messages in the 'msg' folder 
+add_message_files( 
+    FILES 
+    chapter2_msg1.msg 
+) 
+ 
+## Generate services in the 'srv' folder 
+add_service_files( 
+    FILES 
+    chapter2_srv1.srv 
+) 
+Uncomment the generate_messages section to make sure that the generation of messages and services can be done:
+
+## Generate added messages and services with any dependencies 
+ listed here 
+ generate_messages( 
+   DEPENDENCIES 
+   std_msgs 
+ ) 
+You can test whether all is OK using the rossrv tool as follows:
+
+    $ rossrv show chapter2_tutorials/chapter2_srv1  
+If you see the same content as that of the chapter2_srv1.srv file, all is OK.
+
+--------------------------------------------------------
+USING THE NEW SRV AND MSG FILES:
+----------------------------------
+First, we are going to learn how to create a service and how to use it in ROS. Our service will calculate the sum of three numbers. We need two nodes: a server and a client.
+
+In the chapter2_tutorials package, create two new nodes with the following names: example2_a.cpp and example2_b.cpp. Remember to put the files in thesrc folder.
+
+In the first file, example2_a.cpp, add the following code:
+
+#include "ros/ros.h" 
+#include "chapter2_tutorials/chapter2_srv1.h" 
+ 
+bool add(chapter2_tutorials::chapter2_srv1::Request  &amp;req, 
+         chapter2_tutorials::chapter2_srv1::Response &amp;res) 
+{ 
+  res.sum = req.A + req.B + req.C; 
+  ROS_INFO("request: A=%ld, B=%ld C=%ld", (int)req.A, (int)req.B, 
+     (int)req.C); 
+  ROS_INFO("sending back response: [%ld]", (int)res.sum); 
+  return true; 
+} 
+ 
+int main(int argc, char **argv) 
+{ 
+  ros::init(argc, argv, "add_3_ints_server"); 
+  ros::NodeHandle n; 
+  ros::ServiceServer service = n.advertiseService("add_3_ints", 
+     add); 
+  ROS_INFO("Ready to add 3 ints."); 
+  ros::spin(); 
+ 
+  return 0; 
+} 
+Let's explain the code. These lines include the necessary headers and the srv file that we created:
+
+#include "ros/ros.h" 
+#include "chapter2_tutorials/chapter2_srv1.h" 
+This function will add three variables and send the result to the other node:
+
+bool add(chapter2_tutorials::chapter2_srv1::Request  &amp;req, 
+         chapter2_tutorials::chapter2_srv1::Response &amp;res) 
+Here, the service is created and advertised over ROS:
+
+ros::ServiceServer service = n.advertiseService("add_3_ints", 
+   add);
+In the second file, example2_b.cpp, add this code:
+
+#include "ros/ros.h" 
+#include "chapter2_tutorials/chapter2_srv1.h" 
+#include <cstdlib> 
+ 
+int main(int argc, char **argv) 
+{ 
+  ros::init(argc, argv, "add_3_ints_client"); 
+  if (argc != 4) 
+  { 
+    ROS_INFO("usage: add_3_ints_client A B C "); 
+    return 1; 
+  } 
+ 
+  ros::NodeHandle n; 
+  ros::ServiceClient client = 
+     n.serviceClient<chapter2_tutorials::chapter2_srv1>("add_3_ints"); 
+  chapter2_tutorials::chapter2_srv1 srv; 
+  srv.request.A = atoll(argv[1]); 
+  srv.request.B = atoll(argv[2]); 
+  srv.request.C = atoll(argv[3]); 
+  if (client.call(srv)) 
+  { 
+    ROS_INFO("Sum: %ld", (long int)srv.response.sum); 
+  } 
+  else 
+  { 
+    ROS_ERROR("Failed to call service add_3_ints"); 
+    return 1; 
+  } 
+  return 0; 
+} 
+As usual, let's explain the code. Create a client for the service with the nameadd_3_ints:
+
+ros::ServiceClient client = 
+ n.serviceClient<chapter2_tutorials::chapter2_srv1>("add_3_ints");
+Here, we create an instance of our srv request type and fill all the values to be sent.
+If you remember, the message has three fields:
+
+chapter2_tutorials::chapter2_srv1 srv; 
+srv.request.A = atoll(argv[1]); 
+srv.request.B = atoll(argv[2]); 
+srv.request.C = atoll(argv[3]); 
+With this line, the service is called and the data is sent. If the call succeeds, call() will return true, and if not, call() will return false:
+
+if (client.call(srv)) 
+To build the new nodes, edit CMakeList.txt and add the following lines:
+
+add_executable(example2_a src/example2_a.cpp) 
+add_executable(example2_b src/example2_b.cpp) 
+ 
+add_dependencies(example2_a 
+ chapter2_tutorials_generate_messages_cpp)add_dependencies(example2_b 
+ chapter2_tutorials_generate_messages_cpp) 
+target_link_libraries(example2_a ${catkin_LIBRARIES}) 
+target_link_libraries(example2_b ${catkin_LIBRARIES}) 
+Now execute the following command:
+
+    $ cd ~/dev/catkin_ws
+    $ catkin_make  
+To start the nodes, execute the following command lines:
+
+    $ rosrun chapter2_tutorials example2_a
+    $ rosrun chapter2_tutorials example2_b 1 2 3  
+You should see something similar to this output:
+
+    Node example2_a
+    [ INFO] [1355256113.014539262]: Ready to add 3 ints.
+    [ INFO] [1355256115.792442091]: request: A=1, B=2 C=3
+    [ INFO] [1355256115.792607196]: sending back response: [6]
+    Node example2_b
+    [ INFO] [1355256115.794134975]: Sum: 6  
+Now we are going to create nodes with our custom msg file. The example is the same, that is, example1_a.cpp and example1_b.cpp, but with the new message, chapter2_msg1.msg.
+
+The following code snippet is present in the example3_a.cpp file:
+
+#include "ros/ros.h" 
+#include "chapter2_tutorials/chapter2_msg1.h" 
+#include <sstream> 
+ 
+int main(int argc, char **argv) 
+{ 
+  ros::init(argc, argv, "example3_a"); 
+  ros::NodeHandle n; 
+  ros::Publisher pub = 
+     n.advertise<chapter2_tutorials::chapter2_msg1>("message", 1000); 
+  ros::Rate loop_rate(10); 
+  while (ros::ok()) 
+  { 
+    chapter2_tutorials::chapter2_msg1 msg; 
+    msg.A = 1; 
+    msg.B = 2; 
+    msg.C = 3; 
+    pub.publish(msg); 
+    ros::spinOnce(); 
+    loop_rate.sleep(); 
+  } 
+  return 0; 
+} 
+The following code snippet is present in the example3_b.cpp file:
+
+#include "ros/ros.h" 
+#include "chapter2_tutorials/chapter2_msg1.h" 
+ 
+void messageCallback(const 
+ chapter2_tutorials::chapter2_msg1::ConstPtr&amp; msg) 
+{ 
+  ROS_INFO("I heard: [%d] [%d] [%d]", msg->A, msg->B, msg->C); 
+} 
+ 
+int main(int argc, char **argv) 
+{ 
+  ros::init(argc, argv, "example3_b"); 
+  ros::NodeHandle n; 
+  ros::Subscriber sub = n.subscribe("message", 1000, 
+     messageCallback); 
+  ros::spin(); 
+  return 0; 
+} 
+If we run both nodes now, we will see something similar to the following output:
+
+    ...
+    [ INFO] [1355270835.920368620]: I heard: [1] [2] [3]
+    [ INFO] [1355270836.020326372]: I heard: [1] [2] [3]
+    [ INFO] [1355270836.120367449]: I heard: [1] [2] [3]
+    [ INFO] [1355270836.220266466]: I heard: [1] [2] [3]
+    ...  
+---------------------------------------------------------------------------
+THE LAUNCH FILE:
+-----------------
+The launch file is a useful feature in ROS for launching more than one node. In these sections, we have created nodes and we have been executing them in different shells. Imagine working with 20 nodes and the nightmare of executing each one in a shell!
+
+With the launch file, we can do it in the same shell by launching a configuration file with the extension .launch.
+
+To practise using this utility, we are going to create a new folder in our package as follows:
+
+    $ roscd chapter2_tutorials/
+    $ mkdir launch
+    $ cd launch
+    $ vim chapter2.launch  
+Now put the following code inside the chapter2.launch file:
+
+<?xml version="1.0"?> 
+<launch> 
+  <node name ="example1_a" pkg="chapter2_tutorials" 
+     type="example1_a"/>  <node name ="example1_b" pkg="chapter2_tutorials" 
+     type="example1_b"/> 
+</launch> 
+This file is simple, although you can write a very complex file if you want, for example, to control a complete robot, such as PR2 or Robonaut. Both are real robots and they are simulated in ROS.
+
+The file has a launch tag; inside this tag, you can see the node tag. The node tag is used to launch a node from a package, for example, the example1_a node from the chapter2_tutorials package.
+
+This launch file will execute two nodes-the first two examples of this chapter. If you remember, the example1_a node sends a message to the example1_b node.
+To launch the file, you can use the following command:
+
+    $ roslaunch chapter2_tutorials chapter2.launch  
+You will see something similar to the following screenshot on your screen:
+
+The running nodes are listed in the screenshot. You can also see the running nodes using the following command:
+
+    $ rosnode list  
+You will see the three nodes listed as follows:
+
+When you launch a launch file, it is not necessary to execute it before the roscore command; roslaunch does it for us.
+
+Remember that the example1_b node prints on the screen the message received from the other node. If you take a look, you won't see anything. This is because example1_b prints the message using ROS_INFO, and when you run only a node in a shell, you can see it, but when you run a launch file, you can't.
+
+Now, to see the message printed on the screen, you can use the rqt_console utility. You will learn more about this utility in the following chapters. Now run the following command:
+
+    $ rqt_console  
+You will see the message sent by example1_b, as shown in the following screenshot:
+
+On the line, you can see the message, the node that has sent it, and the path of the source file.
+-------------------------------------------------------------------------------
+DYNAMIC PARAMETERS:
+-------------------
+Another utility in ROS is the Dynamic Reconfigure utility. Normally, when you are programming a new node, you initialize the variables with data that can only be changed within the node. If you want to change these values dynamically from outside the node, you can use Parameter Server, services, or topics. If you are working in a PID node to control a motor, for example, you should use the Dynamic Reconfigure utility.
+
+In this section, you will learn how to configure a basic node with this feature. Add the necessary lines in the CMakeLists.txt and package.xml files.
+
+To use Dynamic Reconfigure, you should write a configuration file and save it in the cfg folder in your package. Create the folder and a new file as follows:
+
+    $ roscd chapter2_tutorials
+    $ mkdir cfg
+    $ vim chapter2.cfg  
+Write the following code in the chapter2.cfg file:
+
+#!/usr/bin/env python 
+PACKAGE = "chapter2_tutorials" 
+ 
+from dynamic_reconfigure.parameter_generator_catkin import * 
+ 
+gen = ParameterGenerator() 
+ 
+gen.add("double_param", double_t, 0, "A double parameter", .1, 0, 
+ 1)gen.add("str_param", str_t, 0, "A string parameter", 
+ "Chapter2_dynamic_reconfigure") 
+gen.add("int_param", int_t, 0, "An Integer parameter", 1,  0, 100) 
+gen.add("bool_param",   bool_t, 0, "A Boolean parameter",  True) 
+ 
+size_enum = gen.enum([ gen.const("Low", int_t, 0, "Low is 0"), 
+gen.const("Medium", int_t, 1, "Medium is 1"), 
+gen.const("High", int_t, 2, "High is 2")], 
+                 "Select from the list") 
+ 
+gen.add("size", int_t, 0, "Select from the list", 1, 0, 3, 
+ edit_method=size_enum) 
+ 
+exit(gen.generate(PACKAGE, "chapter2_tutorials", "chapter2_")) 
+Let's explain the code. These lines initialize ROS and import the parameter generator:
+
+#!/usr/bin/env python 
+PACKAGE = "chapter2_tutorials" 
+ 
+from dynamic_reconfigure.parameter_generator_catkin import * 
+The following line initializes the parameter generator, and thanks to that, we can start to add parameters in the following lines:
+
+gen = ParameterGenerator() 
+gen.add("double_param", double_t, 0, "A double parameter", .1, 0, 
+ 1)gen.add("str_param", str_t, 0, "A string parameter", 
+ "Chapter2_dynamic_reconfigure") 
+gen.add("int_param", int_t, 0, "An Integer parameter", 1,  0, 100) 
+gen.add("bool_param",   bool_t, 0, "A Boolean parameter",  True) 
+These lines add different parameter types and set the default values, description, range, and so on. The parameter has the following arguments:
+
+gen.add(name, type, level, description, default, min, max) 
+name: This is the name of the parameter
+type: This is the type of the value stored
+level: This is a bitmask that is passed to the callback
+description: This is a short description of the parameter
+default: This is the default value when the node starts
+min: This is the minimum value for the parameter
+max: This is the maximum value for the parameter
+The names of the parameters must be unique, and the values have to be in the range and have min and max values:
+
+exit(gen.generate(PACKAGE, "chapter2_tutorials", "chapter2_")) 
+The last line generates the necessary files and exits the program. Notice that the .cfg file was written in Python. This section is for C++ snippets, but we will sometimes use Python snippets.
+
+It is necessary to change the permissions for the file because the file will be executed by ROS. To make the file executable and runnable by any user, we will use the chmod command with the a+x parameter as follows:
+
+    $ chmod a+x cfg/chapter2.cfg  
+Open CMakeList.txt and add the following lines:
+
+find_package(catkin REQUIRED COMPONENTS 
+roscpp 
+  std_msgs 
+  message_generation 
+  dynamic_reconfigure 
+) 
+ 
+generate_dynamic_reconfigure_options( 
+  cfg/chapter2.cfg 
+) 
+ 
+add_dependencies(example4 chapter2_tutorials_gencfg) 
+Now we are going to write our new node with Dynamic Reconfigure support. Create a new file in your src folder as follows:
+
+    $ roscd chapter2_tutorials
+    $ vim src/example4.cpp  
+Write the following code snippet in the file:
+
+#include <ros/ros.h> 
+#include <dynamic_reconfigure/server.h> 
+#include <chapter2_tutorials/chapter2Config.h> 
+ 
+void callback(chapter2_tutorials::chapter2Config &amp;config, uint32_t 
+ level) { 
+  ROS_INFO("Reconfigure Request: %d %f %s %s %d", 
+        config.int_param, 
+        config.double_param, 
+        config.str_param.c_str(), 
+        config.bool_param?"True":"False", 
+        config.size); 
+} 
+ 
+int main(int argc, char **argv) { 
+  ros::init(argc, argv, "example4_dynamic_reconfigure"); 
+ 
+  dynamic_reconfigure::Server<chapter2_tutorials::chapter2Config> 
+   server;  dynamic_reconfigure::Server<chapter2_tutorials::chapter2Config>::
+   CallbackType f; 
+ 
+  f = boost::bind(&amp;callback, _1, _2); 
+  server.setCallback(f); 
+ 
+  ros::spin(); 
+  return 0; 
+} 
+Let's explain the code and note the important lines. As usual, these lines include the headers for ROS, Parameter Server, and our config file created earlier:
+
+#include <ros/ros.h> 
+#include <dynamic_reconfigure/server.h> 
+#include <chapter2_tutorials/chapter2Config.h> 
+The callback function will print the new values for the parameters. The way to access the parameters is, for example, config.int_param. The name of the parameter must be the same as the one that you configured in the example2.cfg file:
+
+void callback(chapter2_tutorials::chapter2Config &amp;config, uint32_t 
+ level) { 
+  ROS_INFO("Reconfigure Request: %d %f %s %s %d", 
+         config.int_param, 
+         config.double_param, 
+         config.str_param.c_str(), 
+         config.bool_param?"True":"False", 
+         config.size); 
+} 
+To continue, the server is initialized in the line where we pass the chapter2_Config configuration file:
+
+dynamic_reconfigure::Server<chapter2_tutorials::chapter2Config> 
+ server;dynamic_reconfigure::Server<chapter2_tutorials::chapter2Config>::
+ CallbackType f; 
+ 
+  f = boost::bind(&amp;callback, _1, _2); 
+server.setCallback(f); 
+Now we send the callback function to the server. When the server gets a reconfiguration request, it will call the callback function.
+
+Once we are done with the explanation, we need to add lines to the CMakeLists.txt file as follows:
+
+add_executable(example4 src/example4.cpp) 
+ 
+add_dependencies(example4 chapter2_tutorials_gencfg) 
+ 
+target_link_libraries(example4 ${catkin_LIBRARIES}) 
+Now you have to compile and run the node and the Dynamic Reconfigure GUI as follows:
+
+    $ roscore
+    $ rosrun chapter2_tutorials example4
+    $ rosrun rqt_reconfigure rqt_reconfigure  
+When you execute the last command, you will see a new window where you can dynamically modify the parameters of the node, as shown in the following screenshot:
+Each time you modify a parameter with the slider, the checkbox, and so on, you will see the changes made in the shell where the node is running. You can see an example in the following screenshot:
+Thanks to Dynamic Reconfigure, you can program and test your nodes more efficiently and faster. Using the program with hardware is a good choice and you will learn more about it in the following chapters.
+-----------------------------------
+
+
